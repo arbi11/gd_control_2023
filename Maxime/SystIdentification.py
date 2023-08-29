@@ -20,7 +20,7 @@ from sysidentpy.residues.residues_correlation import compute_residues_autocorrel
 
 # ### Data 
 
-# In[2]:
+# In[18]:
 
 
 url = "C:/Users/mfavre4/Desktop/test/2023/U_core_T4B_08June23.csv"
@@ -44,7 +44,7 @@ for i,c in enumerate(ds_I):
     exec('I_id[i]='+str(c)+'_id')
     
     #Creating validation arrays with the current of each pole
-    exec(str(c)+'_val'+'= ds_I[str(c)][492::].values.reshape(-1, 1)')
+    exec(str(c)+'_val'+'= ds_I[str(c)][492:702:].values.reshape(-1, 1)')
     exec('I_val[i]='+str(c)+'_val')
 
 #Input id and validation sets
@@ -54,13 +54,14 @@ x_val = np.concatenate([x for x in I_val], axis =1 )
 #Output id and validation sets
 y_id, y_val = ds_T['Total_Torque'][0:492].values.reshape(-1, 1), ds_T['Total_Torque'][492::].values.reshape(-1, 1)
 
+#Lags for each inputs [[1,2], [1,2]...]
 for i,x in enumerate(xlags): xlags[i] = ([i for i in range(1,3)])
 
 
-# In[4]:
+# In[19]:
 
 
-basis_function = Polynomial(degree=5)
+basis_function = Polynomial(degree=3)
 model = FROLS(
     order_selection=True,
     n_info_values=39,
@@ -74,7 +75,7 @@ model = FROLS(
 model.fit(X=x_id, y=y_id)
 
 
-# In[ ]:
+# In[23]:
 
 
 yhat = model.predict(X=x_val, y=y_val)
@@ -87,9 +88,42 @@ r = pd.DataFrame(
         ),
     columns=['Regressors', 'Parameters', 'ERR'])
 print(r)
-plot_results(y=y_valid[0:100], yhat=yhat[0:100], n=1000)
-ee = compute_residues_autocorrelation(y_valid, yhat)
+plot_results(y=y_val[0:100], yhat=yhat[0:100], n=1000)
+
+
+# In[22]:
+
+
+y_hat = model.predict(X=x_val, y=y_val, steps_ahead=1)
+rrse = root_relative_squared_error(y_val, y_hat)
+print(rrse)
+r = pd.DataFrame(
+    results(
+        model.final_model, model.theta, model.err,
+        model.n_terms, err_precision=8, dtype='sci'
+        ),
+    columns=['Regressors', 'Parameters', 'ERR'])
+print(r)
+
+plot_results(y=y_val, yhat = y_hat, n=1000)
+
+
+# In[24]:
+
+
+y_hat = model.predict(X=x_val, y=y_val, steps_ahead=5)
+rrse = root_relative_squared_error(y_val, y_hat)
+print(rrse)
+plot_results(y=y_val, yhat = y_hat, n=1000)
+
+
+# ### Residue
+
+# In[ ]:
+
+
+ee = compute_residues_autocorrelation(y_val, yhat)
 plot_residues_correlation(data=ee, title="Residues", ylabel="$e^2$")
-x1e = compute_cross_correlation(y_valid, yhat, x2_val)
+x1e = compute_cross_correlation(y_val, yhat, x2_val)
 plot_residues_correlation(data=x1e, title="Residues", ylabel="$x_1e$")
 
