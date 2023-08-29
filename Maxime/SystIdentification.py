@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[4]:
+# In[1]:
 
 
 import numpy as np
@@ -18,50 +18,67 @@ from sysidentpy.utils.plotting import plot_residues_correlation, plot_results
 from sysidentpy.residues.residues_correlation import compute_residues_autocorrelation, compute_cross_correlation
 
 
-# In[28]:
+# ### Data 
+
+# In[2]:
 
 
-url = "C:/Users/mfavre4/Desktop/test/2022/df_Ucore_ACW_AE.csv"
+url = "C:/Users/mfavre4/Desktop/test/2023/U_core_T4B_08June23.csv"
 df = pd.read_csv(url, sep=",")
 dataset = df.astype(float)
 
+#Inputs - Current of each poles
+ds_I = (dataset.loc[:,"I_1":"I_30"])
+
+#Output - Total torque
+frames = [(dataset.loc[0:701,"totalTorque_0":"totalTorque_29"]),(dataset.loc[0:701,'totalTorque_30']),(dataset.loc[0:701,'Total_Torque']),(dataset.loc[0:701,'Solved']) ]
+ds_T = pd.concat(frames,axis=1)
+
+print(ds_T.shape)
+
+I_id, I_val, xlags = [None for n in range(ds_I.shape[1])],[None for n in range(ds_I.shape[1])],[None for n in range(ds_I.shape[1])]
+
+for i,c in enumerate(ds_I):
+    #Creating id arrays with the current of each pole
+    exec(str(c)+'_id'+'= ds_I[str(c)][0:492].values.reshape(-1, 1)')
+    exec('I_id[i]='+str(c)+'_id')
+    
+    #Creating validation arrays with the current of each pole
+    exec(str(c)+'_val'+'= ds_I[str(c)][492::].values.reshape(-1, 1)')
+    exec('I_val[i]='+str(c)+'_val')
+
+#Input id and validation sets
+x_id = np.concatenate([x for x in I_id], axis =1 )  
+x_val = np.concatenate([x for x in I_val], axis =1 ) 
+
+#Output id and validation sets
+y_id, y_val = ds_T['Total_Torque'][0:492].values.reshape(-1, 1), ds_T['Total_Torque'][492::].values.reshape(-1, 1)
+
+for i,x in enumerate(xlags): xlags[i] = ([i for i in range(1,3)])
 
 
-ds_CW = (dataset.loc[:,"I_S1":"total_torque"])
-
-data = np.arange(0,len(ds_CW),1)
-xdata = ds_CW[['I_S1']].fillna(0).to_numpy()
-#pd.DataFrame(data)
-
-ydata = ds_CW[['total_torque']].fillna(0).to_numpy()
-
-# Generate a dataset of a simulated dynamical system
-# using the train test split function
-
-x_train, x_valid,y_train, y_valid = train_test_split(ydata,xdata ,
-                                   random_state=104, 
-                                   test_size=0.25, 
-                                   shuffle=True)
-ds_CW.head()
+# In[4]:
 
 
-# In[26]:
-
-
-basis_function = Polynomial(degree=3)
+basis_function = Polynomial(degree=5)
 model = FROLS(
     order_selection=True,
     n_info_values=39,
     extended_least_squares=False,
     ylag=20,
-    xlag=10,
+    xlag=xlags,
     info_criteria='aic',
     estimator='least_squares',
     basis_function=basis_function
 )
-model.fit(X=x_train, y=y_train)
-yhat = model.predict(X=x_valid, y=y_valid)
-rrse = root_relative_squared_error(y_valid, yhat)
+model.fit(X=x_id, y=y_id)
+
+
+# In[ ]:
+
+
+yhat = model.predict(X=x_val, y=y_val)
+rrse = root_relative_squared_error(y_val, yhat)
 print(rrse)
 r = pd.DataFrame(
     results(
@@ -75,10 +92,4 @@ ee = compute_residues_autocorrelation(y_valid, yhat)
 plot_residues_correlation(data=ee, title="Residues", ylabel="$e^2$")
 x1e = compute_cross_correlation(y_valid, yhat, x2_val)
 plot_residues_correlation(data=x1e, title="Residues", ylabel="$x_1e$")
-
-
-# In[ ]:
-
-
-
 
