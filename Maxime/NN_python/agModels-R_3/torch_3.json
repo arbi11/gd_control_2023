@@ -1,0 +1,76 @@
+{
+    "name": "NeuralNetTorch",
+    "model_type": "TabularNeuralNetTorchModel",
+    "problem_type": "regression",
+    "eval_metric": "root_mean_squared_error",
+    "stopping_metric": "root_mean_squared_error",
+    "fit_time": 115.06300044059753,
+    "num_classes": null,
+    "quantile_levels": null,
+    "predict_time": 0.008997678756713867,
+    "val_score": -6.22972776550216,
+    "hyperparameters": {
+        "num_epochs": 500,
+        "epochs_wo_improve": 20,
+        "activation": "relu",
+        "embedding_size_factor": 1.0,
+        "embed_exponent": 0.56,
+        "max_embedding_dim": 100,
+        "y_range": null,
+        "y_range_extend": 0.05,
+        "dropout_prob": 0.1,
+        "optimizer": "adam",
+        "learning_rate": 0.0003,
+        "weight_decay": 1e-06,
+        "proc.embed_min_categories": 4,
+        "proc.impute_strategy": "median",
+        "proc.max_category_levels": 100,
+        "proc.skew_threshold": 0.99,
+        "use_ngram_features": false,
+        "num_layers": 4,
+        "hidden_size": 128,
+        "max_batch_size": 512,
+        "use_batchnorm": false,
+        "loss_function": "auto"
+    },
+    "hyperparameters_fit": {
+        "batch_size": 128,
+        "num_epochs": 76
+    },
+    "hyperparameters_nondefault": [],
+    "ag_args_fit": {
+        "max_memory_usage_ratio": 1.0,
+        "max_time_limit_ratio": 1.0,
+        "max_time_limit": null,
+        "min_time_limit": 0,
+        "valid_raw_types": [
+            "bool",
+            "int",
+            "float",
+            "category"
+        ],
+        "valid_special_types": null,
+        "ignored_type_group_special": [
+            "text_ngram",
+            "text_as_category"
+        ],
+        "ignored_type_group_raw": null,
+        "get_features_kwargs": null,
+        "get_features_kwargs_extra": null,
+        "predict_1_batch_size": null,
+        "temperature_scalar": null
+    },
+    "num_features": 4,
+    "features": [
+        "rotor_posn",
+        "stator_exc_0",
+        "stator_exc_U",
+        "stator_exc_D"
+    ],
+    "memory_size": 211572,
+    "compile_time": null,
+    "is_initialized": true,
+    "is_fit": true,
+    "is_valid": true,
+    "can_infer": true
+}
